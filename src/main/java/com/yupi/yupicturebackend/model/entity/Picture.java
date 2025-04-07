@@ -1,12 +1,10 @@
 package com.yupi.yupicturebackend.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 图片
@@ -18,7 +16,7 @@ public class Picture implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -94,7 +92,28 @@ public class Picture implements Serializable {
     /**
      * 是否删除
      */
+    @TableLogic
     private Integer isdelete;
+
+    /**
+     * 审核状态：0-待审核; 1-通过; 2-拒绝
+     */
+    private Integer reviewstatus;
+
+    /**
+     * 审核信息
+     */
+    private String reviewmessage;
+
+    /**
+     * 审核人 ID
+     */
+    private Long reviewerid;
+
+    /**
+     * 审核时间
+     */
+    private Date reviewtime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
@@ -126,7 +145,11 @@ public class Picture implements Serializable {
             && (this.getCreatetime() == null ? other.getCreatetime() == null : this.getCreatetime().equals(other.getCreatetime()))
             && (this.getEdittime() == null ? other.getEdittime() == null : this.getEdittime().equals(other.getEdittime()))
             && (this.getUpdatetime() == null ? other.getUpdatetime() == null : this.getUpdatetime().equals(other.getUpdatetime()))
-            && (this.getIsdelete() == null ? other.getIsdelete() == null : this.getIsdelete().equals(other.getIsdelete()));
+            && (this.getIsdelete() == null ? other.getIsdelete() == null : this.getIsdelete().equals(other.getIsdelete()))
+            && (this.getReviewstatus() == null ? other.getReviewstatus() == null : this.getReviewstatus().equals(other.getReviewstatus()))
+            && (this.getReviewmessage() == null ? other.getReviewmessage() == null : this.getReviewmessage().equals(other.getReviewmessage()))
+            && (this.getReviewerid() == null ? other.getReviewerid() == null : this.getReviewerid().equals(other.getReviewerid()))
+            && (this.getReviewtime() == null ? other.getReviewtime() == null : this.getReviewtime().equals(other.getReviewtime()));
     }
 
     @Override
@@ -149,6 +172,10 @@ public class Picture implements Serializable {
         result = prime * result + ((getEdittime() == null) ? 0 : getEdittime().hashCode());
         result = prime * result + ((getUpdatetime() == null) ? 0 : getUpdatetime().hashCode());
         result = prime * result + ((getIsdelete() == null) ? 0 : getIsdelete().hashCode());
+        result = prime * result + ((getReviewstatus() == null) ? 0 : getReviewstatus().hashCode());
+        result = prime * result + ((getReviewmessage() == null) ? 0 : getReviewmessage().hashCode());
+        result = prime * result + ((getReviewerid() == null) ? 0 : getReviewerid().hashCode());
+        result = prime * result + ((getReviewtime() == null) ? 0 : getReviewtime().hashCode());
         return result;
     }
 
@@ -174,6 +201,10 @@ public class Picture implements Serializable {
         sb.append(", edittime=").append(edittime);
         sb.append(", updatetime=").append(updatetime);
         sb.append(", isdelete=").append(isdelete);
+        sb.append(", reviewstatus=").append(reviewstatus);
+        sb.append(", reviewmessage=").append(reviewmessage);
+        sb.append(", reviewerid=").append(reviewerid);
+        sb.append(", reviewtime=").append(reviewtime);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();
