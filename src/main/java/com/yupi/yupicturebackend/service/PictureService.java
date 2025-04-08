@@ -6,6 +6,7 @@ import com.yupi.yupicturebackend.model.dto.user.picture.*;
 import com.yupi.yupicturebackend.model.entity.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.yupi.yupicturebackend.model.entity.User;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -51,10 +52,16 @@ public interface PictureService extends IService<Picture> {
      * @param pictureUploadByBatchRequest
      * @param loginUser
      * @return 成功创建的图片数
+     *
      */
     Integer uploadPictureByBatch(
             PictureUploadByBatchRequest pictureUploadByBatchRequest,
             User loginUser
     );
 
+    Page<Picture> getFromCache(PictureQueryRequest pictureQueryRequest,Page<Object> objectPage, QueryWrapper<Picture> queryWrapper);
+    boolean invalidateByPrefix();
+
+    @Async
+    void clearPictureFile(Picture oldPicture);
 }

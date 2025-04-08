@@ -1,5 +1,6 @@
 package com.yupi.yupicturebackend.manager;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
@@ -10,7 +11,9 @@ import cn.hutool.http.HttpStatus;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.http.Method;
 import com.qcloud.cos.model.PutObjectResult;
+import com.qcloud.cos.model.ciModel.persistence.CIObject;
 import com.qcloud.cos.model.ciModel.persistence.ImageInfo;
+import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.yupi.yupicturebackend.config.CosClientConfig;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
@@ -62,18 +65,47 @@ public abstract class PictureUploadTemplate {
         try {
             // 创建临时文件
             file = File.createTempFile(uploadPath, null);
-            processFile(inputSource,file);
-            // 上传图片
+            // 处理文件来源（本地或 URL）
+            processFile(inputSource, file);
+            // 上传图片到对象存储
             PutObjectResult putObjectResult = cosManager.putPictureObject(uploadPath, file);
             ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
-            // 封装返回结果
+            ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
+            List<CIObject> objectList = processResults.getObjectList();
+            if (CollUtil.isNotEmpty(objectList)) {
+                CIObject compressedCiObject = objectList.get(0);
+                CIObject thumbNailCiObject = compressedCiObject;
+                if(objectList.size() > 1){
+                     thumbNailCiObject = objectList.get(1);
+                }
+                // 封装压缩图返回结果
+                return buildResult(originFilename, compressedCiObject,thumbNailCiObject);
+            }
+            // 封装原图返回结果
             return buildResult(imageInfo, originFilename, file, uploadPath);
         } catch (Exception e) {
             log.error("图片上传到对象存储失败", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
-        } finally {
+        }
+ finally {
             this.deleteTempFile(file);
         }
+    }
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject,CIObject thumbNailCiObject) {
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        int picWidth = compressedCiObject.getWidth();
+        int picHeight = compressedCiObject.getHeight();
+        double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
+        uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
+        uploadPictureResult.setPicWidth(picWidth);
+        uploadPictureResult.setPicHeight(picHeight);
+        uploadPictureResult.setPicScale(picScale);
+        uploadPictureResult.setPicFormat(compressedCiObject.getFormat());
+        uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
+        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbNailCiObject.getKey());
+        // 设置图片为压缩后的地址
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
+        return uploadPictureResult;
     }
 
     private UploadPictureResult buildResult(ImageInfo imageInfo, String originFilename, File file, String uploadPath) {

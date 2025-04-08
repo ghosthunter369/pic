@@ -2,6 +2,7 @@ package com.yupi.yupicturebackend.controller;
 
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.yupi.yupicturebackend.annotation.AuthCheck;
 import com.yupi.yupicturebackend.common.BaseResponse;
 import com.yupi.yupicturebackend.common.DeleteRequest;
@@ -20,6 +21,8 @@ import com.yupi.yupicturebackend.model.vo.PictureTagCategory;
 import com.yupi.yupicturebackend.service.PictureService;
 import com.yupi.yupicturebackend.service.UserService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +39,7 @@ public class PictureController {
     UserService userService;
     @Resource
     PictureService pictureService;
+
     /**
      * 上传图片（可重新上传）
      */
@@ -95,7 +99,7 @@ public class PictureController {
         Picture oldPicture = pictureService.getById(id);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可删除
-        if (!oldPicture.getUserid().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+        if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 操作数据库
@@ -201,7 +205,28 @@ public class PictureController {
         // 获取封装类
         return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
     }
-
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                             HttpServletRequest request) {
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 查询数据库
+        pictureQueryRequest.setReviewstatus(PictureReviewStatusEnum.PASS.getValue());
+        Page<Picture> picturePage = pictureService.getFromCache(pictureQueryRequest,new Page<>(current, size),
+                pictureService.getQueryWrapper(pictureQueryRequest));
+//        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+//                pictureService.getQueryWrapper(pictureQueryRequest));
+        // 获取封装类
+        return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+    }
+    @PostMapping("/invalidateByPrefix")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> invalidateByPrefix() {
+        boolean b = pictureService.invalidateByPrefix();
+        return  ResultUtils.success(b);
+    }
     /**
      * 编辑图片（给用户使用）
      */
@@ -216,7 +241,7 @@ public class PictureController {
         // 注意将 list 转为 string
         picture.setTags(JSONUtil.toJsonStr(pictureEditRequest.getTags()));
         // 设置编辑时间
-        picture.setEdittime(new Date());
+        picture.setEditTime(new Date());
         // 数据校验
         pictureService.validPicture(picture);
         User loginUser = userService.getLoginUser(request);
@@ -227,7 +252,7 @@ public class PictureController {
         //预先填充数据
         pictureService.fillReviewParams(picture, loginUser);
         // 仅本人或管理员可编辑
-        if (!oldPicture.getUserid().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+        if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 操作数据库
