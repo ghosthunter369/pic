@@ -30,6 +30,8 @@ public interface PictureService extends IService<Picture> {
                             User loginUser);
 
 
+    void deletePicture(long pictureId, User loginUser);
+
     QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
 
     Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
@@ -64,4 +66,11 @@ public interface PictureService extends IService<Picture> {
 
     @Async
     void clearPictureFile(Picture oldPicture);
+    /**
+     * 校验空间图片的权限
+     *
+     * @param loginUser
+     * @param picture
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
 }
