@@ -1,4 +1,4 @@
-package com.yupi.yupicturebackend.model.dto.user.picture;
+package com.yupi.yupicturebackend.model.dto.picture;
 
 import com.yupi.yupicturebackend.common.PageRequest;
 import lombok.Data;

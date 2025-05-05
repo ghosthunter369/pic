@@ -1,4 +1,4 @@
-package com.yupi.yupicturebackend.model.dto.user.picture;
+package com.yupi.yupicturebackend.model.dto.picture;
 
 import cn.hutool.core.annotation.Alias;
 import com.fasterxml.jackson.annotation.JsonProperty;

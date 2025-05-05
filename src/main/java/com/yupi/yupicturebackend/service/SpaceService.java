@@ -4,14 +4,31 @@ package com.yupi.yupicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yupi.yupicturebackend.model.dto.user.space.SpaceAddRequest;
-import com.yupi.yupicturebackend.model.dto.user.space.SpaceQueryRequest;
+import com.yupi.yupicturebackend.model.dto.space.SpaceAddRequest;
+import com.yupi.yupicturebackend.model.dto.space.SpaceQueryRequest;
 import com.yupi.yupicturebackend.model.entity.Space;
 import com.yupi.yupicturebackend.model.entity.User;
 import com.yupi.yupicturebackend.model.vo.SpaceVO;
 
 import javax.servlet.http.HttpServletRequest;
 
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.yupi.yupicturebackend.model.dto.space.SpaceAddRequest;
+import com.yupi.yupicturebackend.model.dto.space.SpaceQueryRequest;
+import com.yupi.yupicturebackend.model.entity.Space;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.yupi.yupicturebackend.model.entity.User;
+import com.yupi.yupicturebackend.model.vo.SpaceVO;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+ * @author 李鱼皮
+ * @description 针对表【space(空间)】的数据库操作Service
+ * @createDate 2024-12-18 19:53:34
+ */
 public interface SpaceService extends IService<Space> {
 
     /**
@@ -63,4 +80,12 @@ public interface SpaceService extends IService<Space> {
      * @param space
      */
     void fillSpaceBySpaceLevel(Space space);
+
+    /**
+     * 校验空间权限
+     *
+     * @param loginUser
+     * @param space
+     */
+    void checkSpaceAuth(User loginUser, Space space);
 }

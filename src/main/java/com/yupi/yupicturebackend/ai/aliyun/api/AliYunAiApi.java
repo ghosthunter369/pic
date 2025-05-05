@@ -10,7 +10,7 @@ import com.yupi.yupicturebackend.ai.aliyun.CreateOutPaintingTaskResponse;
 import com.yupi.yupicturebackend.ai.aliyun.GetOutPaintingTaskResponse;
 import com.yupi.yupicturebackend.exception.BusinessException;
 import com.yupi.yupicturebackend.exception.ErrorCode;
-import com.yupi.yupicturebackend.model.dto.user.picture.CreateOutPaintingTaskRequest;
+import com.yupi.yupicturebackend.model.dto.picture.CreateOutPaintingTaskRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.yupi.yupicturebackend.model.dto.user.picture;
+package com.yupi.yupicturebackend.model.dto.picture;
 
 import cn.hutool.json.JSONUtil;
 import com.yupi.yupicturebackend.model.entity.Picture;
