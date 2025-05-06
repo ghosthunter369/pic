@@ -250,43 +250,47 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         String picFormat = pictureQueryRequest.getPicFormat();
         String searchText = pictureQueryRequest.getSearchText();
         Long userId = pictureQueryRequest.getUserId();
-        String sortField = pictureQueryRequest.getSortField();
-        String sortOrder = pictureQueryRequest.getSortOrder();
-        Integer reviewstatus = pictureQueryRequest.getReviewstatus();
-        String reviewmessage = pictureQueryRequest.getReviewmessage();
-        Long reviewerid = pictureQueryRequest.getReviewerid();
+        Integer reviewStatus = pictureQueryRequest.getReviewstatus();
+        String reviewMessage = pictureQueryRequest.getReviewmessage();
+        Long reviewerId = pictureQueryRequest.getReviewerid();
+        Long spaceId = pictureQueryRequest.getSpaceId();
         Date startEditTime = pictureQueryRequest.getStartEditTime();
         Date endEditTime = pictureQueryRequest.getEndEditTime();
-        Long spaceId = pictureQueryRequest.getSpaceId();
         boolean nullSpaceId = pictureQueryRequest.isNullSpaceId();
+        String sortField = pictureQueryRequest.getSortField();
+        String sortOrder = pictureQueryRequest.getSortOrder();
         // 从多字段中搜索
         if (StrUtil.isNotBlank(searchText)) {
             // 需要拼接查询条件
-            queryWrapper.and(qw -> qw.like("name", searchText)
-                    .or()
-                    .like("introduction", searchText)
+            // and (name like "%xxx%" or introduction like "%xxx%")
+            queryWrapper.and(
+                    qw -> qw.like("name", searchText)
+                            .or()
+                            .like("introduction", searchText)
             );
         }
         queryWrapper.eq(ObjUtil.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
+        queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
+//        queryWrapper.isNull(nullSpaceId, "spaceId");
         queryWrapper.like(StrUtil.isNotBlank(name), "name", name);
         queryWrapper.like(StrUtil.isNotBlank(introduction), "introduction", introduction);
         queryWrapper.like(StrUtil.isNotBlank(picFormat), "picFormat", picFormat);
+        queryWrapper.like(StrUtil.isNotBlank(reviewMessage), "reviewMessage", reviewMessage);
         queryWrapper.eq(StrUtil.isNotBlank(category), "category", category);
-        queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
-        queryWrapper.isNull(nullSpaceId, "spaceId");
         queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), "picWidth", picWidth);
         queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), "picHeight", picHeight);
         queryWrapper.eq(ObjUtil.isNotEmpty(picSize), "picSize", picSize);
         queryWrapper.eq(ObjUtil.isNotEmpty(picScale), "picScale", picScale);
-        queryWrapper.eq(ObjUtil.isNotEmpty(reviewstatus), "reviewStatus", reviewstatus);
-        queryWrapper.like(ObjUtil.isNotEmpty(reviewmessage), "reviewMessage", reviewmessage);
-        queryWrapper.eq(ObjUtil.isNotEmpty(reviewerid), "reviewerId", reviewerid);
-        //大于等于当前时间
-        queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime),"editTime",startEditTime);
-        queryWrapper.lt(ObjUtil.isNotEmpty(startEditTime),"editTime",endEditTime);
+        queryWrapper.eq(ObjUtil.isNotEmpty(reviewStatus), "reviewStatus", reviewStatus);
+        queryWrapper.eq(ObjUtil.isNotEmpty(reviewerId), "reviewerId", reviewerId);
+        // >= startEditTime
+        queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime), "editTime", startEditTime);
+        // < endEditTime
+        queryWrapper.lt(ObjUtil.isNotEmpty(endEditTime), "editTime", endEditTime);
         // JSON 数组查询
         if (CollUtil.isNotEmpty(tags)) {
+            /* and (tag like "%\"Java\"%" and like "%\"Python\"%") */
             for (String tag : tags) {
                 queryWrapper.like("tags", "\"" + tag + "\"");
             }

@@ -10,7 +10,9 @@ import com.yupi.yupicturebackend.annotation.AuthCheck;
 import com.yupi.yupicturebackend.api.imageSearch.ImageSearchApiFacade;
 import com.yupi.yupicturebackend.api.imageSearch.model.ImageSearchResult;
 import com.yupi.yupicturebackend.auth.annotation.SaSpaceCheckPermission;
+import com.yupi.yupicturebackend.auth.model.SpaceUserAuthManager;
 import com.yupi.yupicturebackend.auth.model.SpaceUserPermissionConstant;
+import com.yupi.yupicturebackend.auth.model.StpKit;
 import com.yupi.yupicturebackend.common.BaseResponse;
 import com.yupi.yupicturebackend.common.DeleteRequest;
 import com.yupi.yupicturebackend.common.ResultUtils;
@@ -48,6 +50,8 @@ public class PictureController {
     SpaceService spaceService;
     @Resource
     AliYunAiApi aliYunAiApi;
+    @Resource
+    SpaceUserAuthManager spaceUserAuthManager;
 
     /**
      * 上传图片（可重新上传）
@@ -178,14 +182,24 @@ public class PictureController {
         ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
         // 空间权限校验
         Long spaceId = picture.getSpaceId();
+        Space space = null;
         if (spaceId != null) {
-            User loginUser = userService.getLoginUser(request);
-            pictureService.checkPictureAuth(loginUser, picture);
+            boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+            // 已经改为使用注解鉴权
+            // User loginUser = userService.getLoginUser(request);
+            // pictureService.checkPictureAuth(loginUser, picture);
+            space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
         }
+        // 获取权限列表
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
+        PictureVO pictureVO = pictureService.getPictureVO(picture, request);
+        pictureVO.setPermissionList(permissionList);
         // 获取封装类
-        return ResultUtils.success(pictureService.getPictureVO(picture, request));
+        return ResultUtils.success(pictureVO);
     }
-
     /**
      * 分页获取图片列表（仅管理员可用）
      */
@@ -220,13 +234,16 @@ public class PictureController {
             pictureQueryRequest.setReviewstatus(PictureReviewStatusEnum.PASS.getValue());
             pictureQueryRequest.setNullSpaceId(true);
         } else {
-            // 私有空间
-            User loginUser = userService.getLoginUser(request);
-            Space space = spaceService.getById(spaceId);
-            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-            if (!loginUser.getId().equals(space.getUserId())) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
-            }
+            boolean hasPermission = StpKit.SPACE.hasPermission(SpaceUserPermissionConstant.PICTURE_VIEW);
+            ThrowUtils.throwIf(!hasPermission, ErrorCode.NO_AUTH_ERROR);
+            // 已经改为使用注解鉴权
+//            // 私有空间
+//            User loginUser = userService.getLoginUser(request);
+//            Space space = spaceService.getById(spaceId);
+//            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+//            if (!loginUser.getId().equals(space.getUserId())) {
+//                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
+//            }
         }
         // 查询数据库
         pictureQueryRequest.setReviewstatus(PictureReviewStatusEnum.PASS.getValue());
