@@ -1,5 +1,6 @@
 package com.yupi.yupicturebackend.controller;
 
+import cn.hutool.http.HttpUtil;
 import com.alibaba.dashscope.app.Application;
 import com.alibaba.dashscope.app.ApplicationParam;
 import com.alibaba.dashscope.app.ApplicationResult;
@@ -83,6 +84,12 @@ public class AiChatController {
                 sink.error(e);
             }
         });
+    }
+    @GetMapping(value = "/getPictureByAi")
+    public String getPictureByAi(@RequestParam String question) {
+        String url = "http://localhost:8122/api/tool/picture/getPicture?question=" + question;
+        String response = HttpUtil.get(url);
+        return response != null ? response : "{}";
     }
 
 }
