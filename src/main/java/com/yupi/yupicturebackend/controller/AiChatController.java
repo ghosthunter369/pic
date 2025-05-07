@@ -86,6 +86,7 @@ public class AiChatController {
         });
     }
     @GetMapping(value = "/getPictureByAi")
+    @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
     public String getPictureByAi(@RequestParam String question) {
         String url = "http://localhost:8122/api/tool/picture/getPicture?question=" + question;
         String response = HttpUtil.get(url);
